@@ -1,18 +1,30 @@
 exports.handler = async (event, context) => {
     if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, body: 'Method Not Allowed' };
+        return {
+            statusCode: 405,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: 'Method Not Allowed' })
+        };
     }
 
     const { image } = JSON.parse(event.body);
     if (!image) {
-        return { statusCode: 400, body: JSON.stringify({ error: 'Image is required' }) };
+        return {
+            statusCode: 400,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: 'Image is required' })
+        };
     }
 
     const API_KEY = process.env.PERFECT_KEY;
     const API_SECRET = process.env.PERFECT_SECRET;
 
     if (!API_KEY || !API_SECRET) {
-        return { statusCode: 500, body: JSON.stringify({ error: 'Server configuration error: Missing credentials' }) };
+        return {
+            statusCode: 500,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: 'Server configuration error: Missing credentials' })
+        };
     }
 
     try {
@@ -35,7 +47,7 @@ exports.handler = async (event, context) => {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ file: image, type: 'image' }), // Assuming API accepts base64 in 'file' field
+            body: JSON.stringify({ file: image, type: 'image' }),
         });
 
         if (!uploadResponse.ok) throw new Error(`Upload failed: ${uploadResponse.statusText}`);
@@ -60,14 +72,18 @@ exports.handler = async (event, context) => {
         let status = 'pending';
         let result = null;
         const startTime = Date.now();
-        const TIMEOUT_MS = 9000; // 9 seconds safety timeout for Netlify Functions
+        const TIMEOUT_MS = 9000;
 
         while (status !== 'completed' && status !== 'failed') {
             if (Date.now() - startTime > TIMEOUT_MS) {
-                return { statusCode: 504, body: JSON.stringify({ error: 'Analysis timed out', taskId }) };
+                return {
+                    statusCode: 504,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ error: 'Analysis timed out', taskId })
+                };
             }
 
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             const pollResponse = await fetch(`https://api.perfectcorp.com/v2/task/${taskId}`, {
                 headers: { 'Authorization': `Bearer ${token}` },
@@ -86,6 +102,7 @@ exports.handler = async (event, context) => {
 
         return {
             statusCode: 200,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(result),
         };
 
@@ -93,6 +110,7 @@ exports.handler = async (event, context) => {
         console.error('Skin Analysis Error:', error);
         return {
             statusCode: 500,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ error: error.message }),
         };
     }

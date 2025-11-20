@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
     "contents": [
         {
@@ -8,4 +9,16 @@
             ]
         }
     ]
+=======
+{
+    "contents": [
+        {
+            "parts": [
+                {
+                    "text": "Hello"
+                }
+            ]
+        }
+    ]
+>>>>>>> 32dc51900d333c5af3e6ada76010dde71827b0fa
 }

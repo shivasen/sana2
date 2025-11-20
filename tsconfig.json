@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
     "files": [],
     "references": [
@@ -11,4 +12,19 @@
     }
   }
     
+=======
+{
+    "files": [],
+    "references": [
+      { "path": "./tsconfig.app.json" },
+      { "path": "./tsconfig.node.json" }
+    ],
+    "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+    
+>>>>>>> 32dc51900d333c5af3e6ada76010dde71827b0fa
 }

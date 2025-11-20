@@ -1,8 +1,25 @@
 exports.handler = async (event, context) => {
+    // CORS headers for all responses
+    const headers = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    };
+
+    // Handle preflight OPTIONS request
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200,
+            headers,
+            body: ''
+        };
+    }
+
     if (event.httpMethod !== 'POST') {
         return {
             statusCode: 405,
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({ error: 'Method Not Allowed' })
         };
     }
@@ -11,7 +28,7 @@ exports.handler = async (event, context) => {
     if (!image) {
         return {
             statusCode: 400,
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({ error: 'Image is required' })
         };
     }
@@ -22,7 +39,7 @@ exports.handler = async (event, context) => {
     if (!API_KEY || !API_SECRET) {
         return {
             statusCode: 500,
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({ error: 'Server configuration error: Missing credentials' })
         };
     }
@@ -78,7 +95,7 @@ exports.handler = async (event, context) => {
             if (Date.now() - startTime > TIMEOUT_MS) {
                 return {
                     statusCode: 504,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers,
                     body: JSON.stringify({ error: 'Analysis timed out', taskId })
                 };
             }
@@ -102,7 +119,7 @@ exports.handler = async (event, context) => {
 
         return {
             statusCode: 200,
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify(result),
         };
 
@@ -110,7 +127,7 @@ exports.handler = async (event, context) => {
         console.error('Skin Analysis Error:', error);
         return {
             statusCode: 500,
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({ error: error.message }),
         };
     }

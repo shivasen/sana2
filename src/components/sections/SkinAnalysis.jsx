@@ -42,8 +42,8 @@ const SkinAnalysis = () => {
                 window.location.hostname === '127.0.0.1';
 
             let data;
-            // Using demo mode until Perfect Corp API endpoints are verified
-            const shouldUseDemo = true; // Change to false when API is configured
+            // Using real API now that endpoints are configured
+            const shouldUseDemo = false;
 
             if (shouldUseDemo) {
                 // ENHANCED DEMO DATA

@@ -30,7 +30,7 @@ export default async function handler(req, res) {
 
         // Step A: Auth
         console.log('Authenticating...');
-        const authResponse = await axios.post('https://yce-api-01.perfectcorp.com/v2/auth', {
+        const authResponse = await axios.post('https://yce-api-01.perfectcorp.com/s2s/v1.0/auth', {
             key: API_KEY,
             secret: API_SECRET
         });
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
         // Step B: Upload
         console.log('Uploading image...');
         const uploadResponse = await axios.post(
-            'https://yce-api-01.perfectcorp.com/v2/file/upload',
+            'https://yce-api-01.perfectcorp.com/s2s/v1.0/file/upload',
             { file: image, type: 'image' },
             { headers: { 'Authorization': `Bearer ${token}` } }
         );
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
         // Step C: Start Task
         console.log('Starting analysis task...');
         const taskResponse = await axios.post(
-            'https://yce-api-01.perfectcorp.com/v2/task/skin-analysis',
+            'https://yce-api-01.perfectcorp.com/s2s/v1.0/task/skin-analysis',
             { fileId },
             { headers: { 'Authorization': `Bearer ${token}` } }
         );
@@ -69,7 +69,7 @@ export default async function handler(req, res) {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             const pollResponse = await axios.get(
-                `https://yce-api-01.perfectcorp.com/v2/task/${taskId}`,
+                `https://yce-api-01.perfectcorp.com/s2s/v1.0/task/${taskId}`,
                 { headers: { 'Authorization': `Bearer ${token}` } }
             );
 

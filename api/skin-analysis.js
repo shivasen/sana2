@@ -54,7 +54,8 @@ export default async function handler(req, res) {
 
         // Step B: Upload
         console.log('Uploading image...');
-        const uploadUrl = 'https://yce-api-01.perfectcorp.com/s2s/v1.0/file/upload';
+        // Trying v1.1 based on documentation hints for file endpoints
+        const uploadUrl = 'https://yce-api-01.perfectcorp.com/s2s/v1.1/file/upload';
         console.log(`POST ${uploadUrl}`);
         const uploadResponse = await axios.post(
             uploadUrl,

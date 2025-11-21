@@ -111,14 +111,20 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error('Skin Analysis Error:', error.message);
+        const errorDetails = {
+            error: error.message,
+            failedUrl: error.config?.url,
+            failedMethod: error.config?.method,
+            status: error.response?.status,
+            data: error.response?.data,
+            headers: error.response?.headers
+        };
+
         if (error.response) {
             console.error('Error Status:', error.response.status);
             console.error('Error Data:', JSON.stringify(error.response.data));
-            console.error('Error Headers:', JSON.stringify(error.response.headers));
         }
-        return res.status(500).json({
-            error: error.message,
-            details: error.response?.data?.message || 'Unknown error'
-        });
+
+        return res.status(500).json(errorDetails);
     }
 }

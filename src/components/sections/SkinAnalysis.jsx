@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Upload, Loader2, AlertCircle, CheckCircle, Droplets, Sun, Activity, Eye, Zap, Thermometer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -24,6 +24,11 @@ const SkinAnalysis = () => {
         }
     };
 
+    const forceRealAnalysis = useMemo(
+        () => import.meta.env.VITE_FORCE_REAL_ANALYSIS === 'true',
+        []
+    );
+
     const analyzeSkin = async () => {
         if (!previewUrl) return;
 
@@ -32,11 +37,15 @@ const SkinAnalysis = () => {
 
         try {
             const base64Image = previewUrl.split(',')[1];
-            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const isLocal =
+                window.location.hostname === 'localhost' ||
+                window.location.hostname === '127.0.0.1';
 
             let data;
+            const shouldUseDemo =
+                !forceRealAnalysis && isLocal && !window.netlifyIdentity;
 
-            if (isLocal && !window.netlifyIdentity) {
+            if (shouldUseDemo) {
                 // ENHANCED DEMO DATA
                 console.warn("Running in DEMO MODE.");
                 await new Promise(resolve => setTimeout(resolve, 2500)); // Simulate deeper analysis
@@ -59,16 +68,34 @@ const SkinAnalysis = () => {
                     }
                 };
             } else {
-                // Real API Call
-                const response = await fetch('/.netlify/functions/skin-analysis', {
+                // Real API Call - detect platform
+                const apiUrl = window.location.hostname.includes('vercel.app')
+                    ? '/api/skin-analysis'  // Vercel
+                    : '/.netlify/functions/skin-analysis';  // Netlify
+
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image: base64Image }),
                 });
 
                 if (!response.ok) {
-                    const errData = await response.json();
-                    throw new Error(errData.error || 'Analysis failed');
+                    // Try to parse a JSON error body first, but fall back to text
+                    let errMsg = 'Analysis failed';
+                    try {
+                        const errData = await response.json();
+                        errMsg = errData?.error || errData?.message || JSON.stringify(errData);
+                    } catch (parseErr) {
+                        try {
+                            const text = await response.text();
+                            // Trim and use a short excerpt to avoid huge HTML blobs
+                            errMsg = (text || '').trim().split('\n')[0].slice(0, 300) || errMsg;
+                        } catch (tErr) {
+                            // ignore, keep default errMsg
+                        }
+                    }
+
+                    throw new Error(errMsg || 'Analysis failed');
                 }
 
                 data = await response.json();

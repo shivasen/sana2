@@ -30,29 +30,38 @@ export default async function handler(req, res) {
 
         // Step A: Auth
         console.log('Authenticating...');
-        const authResponse = await axios.post('https://yce-api-01.perfectcorp.com/s2s/v1.0/auth', {
+        const authUrl = 'https://yce-api-01.perfectcorp.com/s2s/v1.0/auth';
+        console.log(`POST ${authUrl}`);
+        const authResponse = await axios.post(authUrl, {
             key: API_KEY,
             secret: API_SECRET
         });
         const { token } = authResponse.data;
+        console.log('Auth successful, token received');
 
         // Step B: Upload
         console.log('Uploading image...');
+        const uploadUrl = 'https://yce-api-01.perfectcorp.com/s2s/v1.0/file/upload';
+        console.log(`POST ${uploadUrl}`);
         const uploadResponse = await axios.post(
-            'https://yce-api-01.perfectcorp.com/s2s/v1.0/file/upload',
+            uploadUrl,
             { file: image, type: 'image' },
             { headers: { 'Authorization': `Bearer ${token}` } }
         );
         const { fileId } = uploadResponse.data;
+        console.log(`Upload successful, fileId: ${fileId}`);
 
         // Step C: Start Task
         console.log('Starting analysis task...');
+        const taskUrl = 'https://yce-api-01.perfectcorp.com/s2s/v1.0/task/skin-analysis';
+        console.log(`POST ${taskUrl}`);
         const taskResponse = await axios.post(
-            'https://yce-api-01.perfectcorp.com/s2s/v1.0/task/skin-analysis',
+            taskUrl,
             { fileId },
             { headers: { 'Authorization': `Bearer ${token}` } }
         );
         const { taskId } = taskResponse.data;
+        console.log(`Task started, taskId: ${taskId}`);
 
         // Step D: Poll
         console.log(`Polling task ${taskId}...`);
@@ -68,12 +77,15 @@ export default async function handler(req, res) {
 
             await new Promise(resolve => setTimeout(resolve, 1000));
 
+            const pollUrl = `https://yce-api-01.perfectcorp.com/s2s/v1.0/task/${taskId}`;
+            console.log(`GET ${pollUrl}`);
             const pollResponse = await axios.get(
-                `https://yce-api-01.perfectcorp.com/s2s/v1.0/task/${taskId}`,
+                pollUrl,
                 { headers: { 'Authorization': `Bearer ${token}` } }
             );
 
             status = pollResponse.data.status;
+            console.log(`Poll status: ${status}`);
 
             if (status === 'completed') {
                 result = pollResponse.data.result;
@@ -86,7 +98,11 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error('Skin Analysis Error:', error.message);
-        console.error('Error details:', error.response?.data || error);
+        if (error.response) {
+            console.error('Error Status:', error.response.status);
+            console.error('Error Data:', JSON.stringify(error.response.data));
+            console.error('Error Headers:', JSON.stringify(error.response.headers));
+        }
         return res.status(500).json({
             error: error.message,
             details: error.response?.data?.message || 'Unknown error'
